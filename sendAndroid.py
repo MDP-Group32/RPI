@@ -1,5 +1,5 @@
-from android import AndroidMessage, Android
-from config import RPI_MAC_ADDRESS, PORT_NUMBER
+from communication.android import AndroidMessage, Android
+from communication.config import RPI_MAC_ADDRESS, PORT_NUMBER
 
 android = Android(RPI_MAC_ADDRESS, PORT_NUMBER)
 message = AndroidMessage("string", "f")

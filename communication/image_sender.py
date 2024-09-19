@@ -2,9 +2,8 @@ import socket
 from picamera import PiCamera
 from picamera.array import PiRGBArray
 import imagezmq
-import cv2
 
-class ImageAPI:
+class ImageSender:
     def __init__(self, client_socket):
         # Initialize image sender for sending to the PC
         # Initialise and configure camera

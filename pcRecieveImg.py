@@ -1,4 +1,4 @@
-from image_receiver import ImageReceiver
+from communication.image_receiver import ImageReceiver
 
 
 image_receiver = ImageReceiver()
