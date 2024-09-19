@@ -1,4 +1,4 @@
-from camera import ImageReceiver
+from image_receiver import ImageReceiver
 
 
 image_receiver = ImageReceiver()
