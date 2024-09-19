@@ -73,7 +73,7 @@ class PC:
         except OSError as e:
             print("Message failed to be received:", e)
             raise e
-        
+
     def get_server_socket(self):
         return self.server_socket
 
