@@ -1,4 +1,5 @@
 #communication modules
+from communication.algo import get_stm_commands
 from communication.android import Android
 from communication.stm import STM
 from communication.pc import PC
@@ -38,13 +39,17 @@ print("All connections successful")
 #android sends obstacles to rpi, which will be sent to algo (json object)
 #indicates start
 obstacles = android.receive()
-pc.send(obstacles)
+# pc.send(obstacles)
+
+commands_object_json = get_stm_commands(obstacles)
+print('Commands object json:', commands_object_json)
 
 #algo sends all commands(hamiltonian path) to rpi, convert to python dictionary
-commands_object_json = pc.receive()#calling local host
+# commands_object_json = pc.receive()#calling local host
 
 
 commands_dict = json.loads(commands_object_json)
+print('Commands dict:', commands_dict)
 
 #put commands in a queue
 commands_queue = queue.Queue()
