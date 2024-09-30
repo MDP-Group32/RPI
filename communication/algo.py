@@ -40,3 +40,11 @@ def get_stm_commands(obstacles: List[Obstacle]):
     print('Response:', response.json())
     return response.json()
 
+# uncomment to test endpoint
+# if __name__ == "__main__":
+#     obstacles = [
+#         { "id": 1, "x": 15, "y": 10, "d": 4 },
+#         { "id": 2, "x": 1, "y": 18, "d": 2 },
+#     ]
+#     commands_object_json = get_stm_commands(obstacles)
+#     print('Commands object json:', commands_object_json)
