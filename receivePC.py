@@ -4,6 +4,7 @@ from communication.config import RPI_IP_ADDRESS
 pc = PC(RPI_IP_ADDRESS, 5000)
 
 pc.connect()
-pc.receive()
+message = pc.receive()
+print(message)
 pc.disconnect()
 

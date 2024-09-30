@@ -1,4 +1,4 @@
-from client import PCClient
+from pc.client import PCClient
 
 
 pc_client = PCClient(ip="192.168.32.1", port=5000)  # Use the RPi's IP

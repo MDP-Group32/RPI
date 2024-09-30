@@ -24,7 +24,8 @@ class ImageSender:
         # Send the image over the socket
         
         try:
-            self.image_sender.send_image(socket.gethostname(), image)
+            reply = self.image_sender.send_image(socket.gethostname(), image)
             print("Image sent successfully")
+            print(reply)
         except Exception as e:
             print(f"Failed to send image: {e}")

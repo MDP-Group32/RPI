@@ -66,7 +66,7 @@ class PC:
     # receive data from PC
     def receive(self):
         try:
-            unclean_message = self.client_socket.recv(1024)
+            unclean_message = self.client_socket.recv(1024) #might have to increase
             message = unclean_message.decode("utf-8")
             print("Message received from pc:", message)
             return message
