@@ -15,24 +15,24 @@ import json
 android = Android(Config.RPI_MAC_ADDRESS, Config.PORT_NUMBER)
 
 
-pc = PC(Config.RPI_IP_ADDRESS, 5000)
+#pc = PC(Config.RPI_IP_ADDRESS, 5000)
 
 
 #stm = STM(Config.SERIAL_PORT, Config.BAUD_RATE)
 
 android_connect_thread = threading.Thread(target=android.connect)
-pc_connect_thread = threading.Thread(target=pc.connect)
+#pc_connect_thread = threading.Thread(target=pc.connect)
 #stm_connect_thread = threading.Thread(target=stm.connect)
 
 #Start connections of modules
 android_connect_thread.start()
-pc_connect_thread.start()
+#pc_connect_thread.start()
 #stm_connect_thread.start()
 
 #wait for all modules to be connected before proceeding
 #connection errors are handled in the respective modules
 android_connect_thread.join()
-pc_connect_thread.join()
+#pc_connect_thread.join()
 #stm_connect_thread.join()
 print("All connections successful")
 
