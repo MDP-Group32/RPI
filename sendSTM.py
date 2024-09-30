@@ -8,6 +8,9 @@ stm = STM(SERIAL_PORT, BAUD_RATE)
 stm.connect()
 
 #send message to stm
-stm.send("F")
+stm.send("FF100")
+stm.send("RR020")
+stm.send("FF030")
+stm.send("FL000")
 stm.disconnect()
 #send command to stm

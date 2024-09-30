@@ -15,40 +15,40 @@ import json
 android = Android(Config.RPI_MAC_ADDRESS, Config.PORT_NUMBER)
 
 
-pc = PC(Config.RPI_IP_ADDRESS, 5000)
+#pc = PC(Config.RPI_IP_ADDRESS, 5000)
 
 
 #stm = STM(Config.SERIAL_PORT, Config.BAUD_RATE)
 
 android_connect_thread = threading.Thread(target=android.connect)
-pc_connect_thread = threading.Thread(target=pc.connect)
+#pc_connect_thread = threading.Thread(target=pc.connect)
 #stm_connect_thread = threading.Thread(target=stm.connect)
 
 #Start connections of modules
 android_connect_thread.start()
-pc_connect_thread.start()
+#pc_connect_thread.start()
 #stm_connect_thread.start()
 
 #wait for all modules to be connected before proceeding
 #connection errors are handled in the respective modules
 android_connect_thread.join()
-pc_connect_thread.join()
+#pc_connect_thread.join()
 #stm_connect_thread.join()
 print("All connections successful")
 
 #android sends obstacles to rpi, which will be sent to algo (json object)
 #indicates start
-obstacles = android.receive()
+obstacles_json = android.receive()
 #pc.send(obstacles)
-
-commands_object_json = get_stm_commands(obstacles[0])
-print('Commands object json:', commands_object_json)
+obstacles_dict = json.loads(obstacles_json)
+print("Obstacles from android: ", obstacles_dict)
+print("Type from android: ", type(obstacles_dict))
+commands_dict = get_stm_commands(obstacles_dict['obstacles'])
 
 #algo sends all commands(hamiltonian path) to rpi, convert to python dictionary
 #commands_object_json = pc.receive()
 
 
-commands_dict = json.loads(commands_object_json)
 print('Commands dict:', commands_dict)
 
 # #put commands in a queue
