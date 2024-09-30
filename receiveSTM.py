@@ -7,6 +7,6 @@ stm = STM()
 stm.connect()
 
 #receive message from stm
-str = stm.waitReceive()
+str = stm.receive()
 print(str)
 stm.disconnect()
