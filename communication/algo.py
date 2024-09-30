@@ -27,6 +27,7 @@ class RequestBody(TypedDict):
 # ],
 
 def get_stm_commands(obstacles: List[Obstacle]):
+    print("Obstacles from android: ", obstacles)
     request_body: RequestBody = {
       "cat": "obstacles",
       "value": {
