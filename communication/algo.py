@@ -1,6 +1,5 @@
 from typing import List, TypedDict
 import requests
-from config import RPI_IP_ADDRESS
 
 # URL of the FastAPI endpoint
 LOCALHOST_URL = "http://192.168.32.26:8000"

@@ -38,17 +38,17 @@ print("All connections successful")
 
 #android sends obstacles to rpi, which will be sent to algo (json object)
 #indicates start
-obstacles = android.receive()
+obstacles_json = android.receive()
 #pc.send(obstacles)
-
-commands_object_json = get_stm_commands(obstacles[0])
-print('Commands object json:', commands_object_json)
+obstacles_dict = json.loads(obstacles_json)
+print("Obstacles from android: ", obstacles_dict)
+print("Type from android: ", type(obstacles_dict))
+commands_dict = get_stm_commands(obstacles_dict['obstacles'])
 
 #algo sends all commands(hamiltonian path) to rpi, convert to python dictionary
 #commands_object_json = pc.receive()
 
 
-commands_dict = json.loads(commands_object_json)
 print('Commands dict:', commands_dict)
 
 # #put commands in a queue
