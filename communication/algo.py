@@ -1,8 +1,9 @@
 from typing import List, TypedDict
 import requests
+from config import RPI_IP_ADDRESS
 
 # URL of the FastAPI endpoint
-LOCALHOST_URL = "http://127.0.0.1:8000"
+LOCALHOST_URL = "http://192.168.32.26:8000"
 ALGO_URL = "/algo/live"
 
 class Obstacle(TypedDict):
@@ -35,13 +36,13 @@ def get_stm_commands(obstacles: List[Obstacle]):
       },
       "server_mode": "live",
       "algo_type": "Exhaustive Astar"
-    }
+    } 
     response = requests.post(LOCALHOST_URL+ALGO_URL, json=request_body)
     print('Status of request:', response.status_code)
     print('Response:', response.json())
     return response.json()
 
-# uncomment to test endpoint
+#uncomment to test endpoint
 # if __name__ == "__main__":
 #     obstacles = [
 #         { "id": 1, "x": 15, "y": 10, "d": 4 },
