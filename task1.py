@@ -41,7 +41,7 @@ print("All connections successful")
 obstacles = android.receive()
 # pc.send(obstacles)
 
-commands_object_json = get_stm_commands(obstacles)
+commands_object_json = get_stm_commands(obstacles[0])
 print('Commands object json:', commands_object_json)
 
 #algo sends all commands(hamiltonian path) to rpi, convert to python dictionary
