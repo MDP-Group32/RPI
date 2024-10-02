@@ -4,6 +4,7 @@ from communication.android import Android
 from communication.stm import STM
 from communication.pc import PC
 import communication.config as Config
+from communication.image_sender import ImageSender
 
 #functional modules
 import threading
@@ -11,107 +12,80 @@ import time
 import queue
 import json
 
-#initiate all modules
+#initiate and connect android, camera,stm modules
 android = Android(Config.RPI_MAC_ADDRESS, Config.PORT_NUMBER)
+stm = STM(Config.SERIAL_PORT, Config.BAUD_RATE)
+camera = ImageSender("tcp://192.168.32.27:5555")
 
+camera.connect()
+print("Camera Connected") 
+android.connect()
+print("Android connected")
+stm.connect()
+print("STM connected")
 
-#pc = PC(Config.RPI_IP_ADDRESS, 5000)
-
-
-#stm = STM(Config.SERIAL_PORT, Config.BAUD_RATE)
-
-android_connect_thread = threading.Thread(target=android.connect)
-#pc_connect_thread = threading.Thread(target=pc.connect)
-#stm_connect_thread = threading.Thread(target=stm.connect)
-
-#Start connections of modules
-android_connect_thread.start()
-#pc_connect_thread.start()
-#stm_connect_thread.start()
-
-#wait for all modules to be connected before proceeding
-#connection errors are handled in the respective modules
-android_connect_thread.join()
-#pc_connect_thread.join()
-#stm_connect_thread.join()
-print("All connections successful")
-
-#android sends obstacles to rpi, which will be sent to algo (json object)
-#indicates start
+#Receive obstacles from android
 obstacles_json = android.receive()
-#pc.send(obstacles)
+
+#Convert obstacles to dict and send to algo, to receive commands
 obstacles_dict = json.loads(obstacles_json)
-print("Obstacles from android: ", obstacles_dict)
-print("Type from android: ", type(obstacles_dict))
-commands_dict = get_stm_commands(obstacles_dict['obstacles'])
+commands_dict = get_stm_commands(obstacles_dict['obstacles']) 
+commands = commands_dict["commands"]
 
-#algo sends all commands(hamiltonian path) to rpi, convert to python dictionary
-#commands_object_json = pc.receive()
+#function to send commands to stm
+def send_commands(commands):
+    for command in commands:
+        stm.send(command['value'])
+        print("Command: ", command['value'])
+        time.sleep(1)
 
+#function to receive commands from stm
+def stm_producer(p, buffer):
+    while True:
+        data = p.receive()
+        buffer.put(data) 
+        if data == "#####":
+            break
 
-print('Commands dict:', commands_dict)
+#function to send command to image rec
+def camera_consumer(camera, buffer):
+    while True:
+        data = buffer.get()
+        if data[0:2] == "ST":
+            camera.takePic(data[2:5])
+        else:
+            camera.close()
+            break
 
-# #put commands in a queue
-# commands_queue = queue.Queue()
-# for command in commands_dict["commands"]:
-#     #parse the command and put in queue
-#     commands_queue.put(command)
+#buffer to receive commands from stm
+stm_camera_buffer = queue.Queue()
 
-# #function to read data from pc to put into queue
-# def producer(p, buffer):
-#     while True:
-#         data = p.receive()
-#         buffer.put(data) 
+#thread to send commands to stm
+stm_send_thread = threading.Thread(target=send_commands, args=(commands))
 
-# #function to send data to android from queue
-# def consumer(c, buffer):
-#     while True:
-#         data = buffer.get()
-#         c.send(data)#data needs to be Android/jsonified?
+#thread to receive commands from stm
+stm_producer_thread = threading.Thread(target=stm_producer, args=(stm, stm_camera_buffer))
 
+#thread to take pic when command is received
+camera_consumer_thread = threading.Thread(target=camera_consumer, args=(camera, stm_camera_buffer))
 
-# #buffer(producer-consuemr) from image rec to send image content to android
-# pc_android_buffer = queue.Queue()
-# producer_thread = threading.Thread(target=producer, args=(pc, pc_android_buffer))
-# consumer_thread = threading.Thread(target=consumer, args=(android, pc_android_buffer))
+stm_send_thread.start()
+stm_producer_thread.start()
+camera_consumer_thread.start()
 
-# #should this be a thread?
-# #send commands to stm
-# def sendCommand(queue,stm):
-#     while not queue.empty():
-#         command = queue.get().value
-#         stm.send(command)
+camera_consumer_thread.join()
 
+#connect to pc after camera connection is closed
+pc = PC(Config.RPI_IP_ADDRESS, 5000)
+pc.connect()
 
-# #thread to send commands to stm
-# command_thread = threading.Thread(target=sendCommand, args=(commands_queue, stm))
+#receive image content from pc, then send to android
+image_content = pc.receive()
+android.send(image_content)
 
-# producer_thread.join()
-# consumer_thread.join()
-# command_thread.join()
+#close connections
+pc.disconnect()
+android.disconnect()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+stm_send_thread.join()
+stm_producer_thread.join()
