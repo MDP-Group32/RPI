@@ -15,35 +15,53 @@ import json
 #initiate and connect android, camera,stm modules
 android = Android(Config.RPI_MAC_ADDRESS, Config.PORT_NUMBER)
 stm = STM(Config.SERIAL_PORT, Config.BAUD_RATE)
+pc = PC(Config.RPI_IP_ADDRESS, 5000)
 camera = ImageSender("tcp://192.168.32.27:5555")
 
-camera.connect()
-print("Camera Connected") 
+
 android.connect()
 print("Android connected")
 stm.connect()
 print("STM connected")
+pc.connect()
+print("PC connected")
 
 #Receive obstacles from android
+print("Waiting for obstacles from android...")
 obstacles_json = android.receive()
+print("Received obstacles from android...")
 
 #Convert obstacles to dict and send to algo, to receive commands
 obstacles_dict = json.loads(obstacles_json)
+n_obstacles = str(len(obstacles_dict['obstacles']))
+
+#send to pc
+pc.send(n_obstacles)
+print("Message sent: ", n_obstacles)
+pc.disconnect()
+
+camera.connect()
+print("Camera Connected") 
+
 commands_dict = get_stm_commands(obstacles_dict['obstacles']) 
 commands = commands_dict["commands"]
+print(type(commands))
+print(commands)
 
 #function to send commands to stm
 def send_commands(commands):
     for command in commands:
         stm.send(command['value'])
         print("Command: ", command['value'])
-        time.sleep(1)
+        time.sleep(0.5)
+
 
 #function to receive commands from stm
 def stm_producer(p, buffer):
     while True:
         data = p.receive()
         buffer.put(data) 
+        print("From STM: ",data)
         if data == "#####":
             break
 
@@ -61,7 +79,7 @@ def camera_consumer(camera, buffer):
 stm_camera_buffer = queue.Queue()
 
 #thread to send commands to stm
-stm_send_thread = threading.Thread(target=send_commands, args=(commands))
+#stm_send_thread = threading.Thread(target=send_commands, args=(commands,))
 
 #thread to receive commands from stm
 stm_producer_thread = threading.Thread(target=stm_producer, args=(stm, stm_camera_buffer))
@@ -69,7 +87,8 @@ stm_producer_thread = threading.Thread(target=stm_producer, args=(stm, stm_camer
 #thread to take pic when command is received
 camera_consumer_thread = threading.Thread(target=camera_consumer, args=(camera, stm_camera_buffer))
 
-stm_send_thread.start()
+#stm_send_thread.start()
+send_commands(commands)
 stm_producer_thread.start()
 camera_consumer_thread.start()
 
@@ -87,5 +106,6 @@ android.send(image_content)
 pc.disconnect()
 android.disconnect()
 
-stm_send_thread.join()
+#stm_send_thread.join()
 stm_producer_thread.join()
+print("Task 1 completed")

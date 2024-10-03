@@ -6,22 +6,22 @@ import queue
 
 def send_commands():
     stm.send("FL000")
-    time.sleep(1)
+    time.sleep(0.5)
 
     stm.send("FF100")
-    time.sleep(1)
+    time.sleep(0.5)
 
     stm.send("ST000")
-    time.sleep(1)
+    time.sleep(0.5)
     
     stm.send("RR100")
-    time.sleep(1)
+    time.sleep(0.5)
 
     stm.send("BL000")
-    time.sleep(1)
+    time.sleep(0.5)
 
     stm.send("#####")
-    time.sleep(1)
+    time.sleep(0.5)
 
 def producer(p, buffer):
     while True:
