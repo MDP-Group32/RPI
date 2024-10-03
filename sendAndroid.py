@@ -1,8 +1,8 @@
-from communication.android import AndroidMessage, Android
+from communication.android import Android
 from communication.config import RPI_MAC_ADDRESS, PORT_NUMBER
 
 android = Android(RPI_MAC_ADDRESS, PORT_NUMBER)
-message = AndroidMessage("string", "f")
+message = "hi"
 android.connect()
 android.send(message)
 android.disconnect()

@@ -6,27 +6,6 @@ import time
 
 import bluetooth as bt
 
-class AndroidMessage:
-
-    #Class for communicating with Android tablet over Bluetooth.
-
-    def __init__(self, type, value):
-        
-        self.type = type
-        self.value = value
-
-    def get_type(self):
-        
-        return self.type
-
-    def get_value(self):
-        
-        return self.value
-
-    def jsonify(self):
-
-        return json.dumps({"type": self.type, "value": self.value})
-    
 class Android:
 
     def __init__(self, rpiMAC, portNo):
@@ -92,11 +71,11 @@ class Android:
         except Exception as e:
             print(f"Failed to disconnect bluetooth: {e}")
         
-    def send(self, message: AndroidMessage):
+    def send(self, message):
         
         try:
-            self.client_socket.send(f"{message.jsonify()}\n".encode("utf-8"))
-            print(f"Sent to Android: {message.jsonify()}")
+            self.client_socket.send(message.encode("utf-8"))
+            print(f"Sent to Android: ", message)
             
         except OSError as e:
             print(f"Message sending failed: {e}")

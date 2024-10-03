@@ -2,6 +2,7 @@ import socket
 from picamera import PiCamera
 from picamera.array import PiRGBArray
 import imagezmq
+import time
 
 class ImageSender:
     def __init__(self, client_socket):
@@ -10,9 +11,13 @@ class ImageSender:
         self.camera = PiCamera()
         self.camera.resolution = (1024, 768)
         self.camera.rotation = 0
-        self.image_sender = imagezmq.ImageSender(connect_to=client_socket)
+        self.client_socket = client_socket
 
-    def takePic(self):  # Capture and send image to PC
+    def connect(self):
+        self.image_sender = imagezmq.ImageSender(connect_to=self.client_socket)
+        time.sleep(2)
+
+    def takePic(self, message):  # Capture and send image to PC
         # Capture the image in memory
         raw_capture = PiRGBArray(self.camera)
         print('raw capture')
@@ -22,10 +27,17 @@ class ImageSender:
         print('type', type(image))
         print("Image", image)
         # Send the image over the socket
-        
+        hostname = socket.gethostname()
+        identifier = f"{hostname}: {message}"
         try:
-            reply = self.image_sender.send_image(socket.gethostname(), image)
+            reply = self.image_sender.send_image(identifier, image)
             print("Image sent successfully")
             print(reply)
+            time.sleep(1)
         except Exception as e:
             print(f"Failed to send image: {e}")
+        
+    def close(self):
+        self.image_sender.close()
+        self.camera.close()
+        print('Camera Closed')
