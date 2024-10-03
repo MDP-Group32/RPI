@@ -2,7 +2,7 @@ from typing import List, TypedDict
 import requests
 
 # URL of the FastAPI endpoint
-LOCALHOST_URL = "http://192.168.32.26:8000"
+LOCALHOST_URL = "http://192.168.32.27:8000" #MINTING:
 ALGO_URL = "/algo/live"
 
 class Obstacle(TypedDict):
