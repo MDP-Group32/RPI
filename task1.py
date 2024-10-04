@@ -89,6 +89,11 @@ camera_consumer_thread = threading.Thread(target=camera_consumer, args=(camera, 
 
 #stm_send_thread.start()
 send_commands(commands)
+
+#TODO: Check if position is correct
+print("Sending to android coordinates: ", commands_dict["coordinates"])
+android.send(commands_dict["coordinates"])
+
 stm_producer_thread.start()
 camera_consumer_thread.start()
 
