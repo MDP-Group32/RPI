@@ -13,10 +13,10 @@ import queue
 import json
 
 #initiate and connect android, camera,stm modules
-android = Android(Config.RPI_MAC_ADDRESS, Config.PORT_NUMBER)
+android = Android(Config.RPI_MAC_ADDRESS, Config.BT_PORT_NUMBER)
 stm = STM(Config.SERIAL_PORT, Config.BAUD_RATE)
-pc = PC(Config.RPI_IP_ADDRESS, 5000)
-camera = ImageSender("tcp://192.168.32.27:5555")
+pc = PC(Config.RPI_IP_ADDRESS, Config.RPI_PC_PORT)
+camera = ImageSender(Config.PC_IP_ADDRESS)
 
 
 android.connect()
@@ -40,6 +40,7 @@ pc.send(n_obstacles)
 print("Message sent: ", n_obstacles)
 pc.disconnect()
 
+#start a thread to connect to camera
 camera.connect()
 print("Camera Connected") 
 
@@ -78,16 +79,12 @@ def camera_consumer(camera, buffer):
 #buffer to receive commands from stm
 stm_camera_buffer = queue.Queue()
 
-#thread to send commands to stm
-#stm_send_thread = threading.Thread(target=send_commands, args=(commands,))
-
 #thread to receive commands from stm
 stm_producer_thread = threading.Thread(target=stm_producer, args=(stm, stm_camera_buffer))
 
 #thread to take pic when command is received
 camera_consumer_thread = threading.Thread(target=camera_consumer, args=(camera, stm_camera_buffer))
 
-#stm_send_thread.start()
 send_commands(commands)
 
 #TODO: Check if position is correct
@@ -98,6 +95,9 @@ stm_producer_thread.start()
 camera_consumer_thread.start()
 
 camera_consumer_thread.join()
+
+
+
 
 #connect to pc after camera connection is closed
 pc = PC(Config.RPI_IP_ADDRESS, 5000)
