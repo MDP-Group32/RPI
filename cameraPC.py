@@ -14,6 +14,7 @@ def pc_func(pc):
         time.sleep(2)
 
 def camera_func(camera):
+    camera.connect()
     for i in range(4):
         camera.takePic(1)
         time.sleep(2)
