@@ -56,7 +56,8 @@ def send_commands(commands):
     for command in commands:
         stm.send(command['value'])
         print("Command: ", command['value'])
-        time.sleep(0.5)
+        reply = stm.receive()
+        #time.sleep(0.5)
 
 
 #function to receive commands from stm

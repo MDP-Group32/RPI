@@ -18,9 +18,24 @@ camera = ImageSender(Config.PC_IP_ADDRESS)
 
 android.connect()
 stm.connect()
+camera.connect()
 
-
+#receive start command from android then send to stm
 message = android.receive()
 stm.send(message)
+
+#function to send command to image rec
+def camera_cnp(camera, buffer_consumer, buffer_producer):
+    while True:
+        data = buffer_consumer.get()
+        if data[0:2] == "ST":
+            reply = camera.takePic(data[2:5])
+            buffer_producer.put(reply)
+        else:
+            camera.close() ##camera is disconnected
+            break
+
+
+
 
 
