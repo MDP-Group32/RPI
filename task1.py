@@ -16,7 +16,7 @@ import json
 android = Android(Config.RPI_MAC_ADDRESS, Config.BT_PORT_NUMBER)
 stm = STM(Config.SERIAL_PORT, Config.BAUD_RATE)
 pc = PC(Config.RPI_IP_ADDRESS, Config.RPI_PC_PORT)
-camera = ImageSender(Config.PC_IP_ADDRESS)
+
 
 
 android.connect()
@@ -26,6 +26,11 @@ print("STM connected")
 pc.connect()
 print("PC connected")
 
+#pc must send its ip address and port to connect for camera, for now it is hardcoded
+camera = ImageSender(Config.PC_IP_ADDRESS)
+camera.connect()
+print("Camera Connected") 
+
 #Receive obstacles from android
 print("Waiting for obstacles from android...")
 obstacles_json = android.receive()
@@ -33,16 +38,13 @@ print("Received obstacles from android...")
 
 #Convert obstacles to dict and send to algo, to receive commands
 obstacles_dict = json.loads(obstacles_json)
-n_obstacles = str(len(obstacles_dict['obstacles']))
+n_obstacles = len(obstacles_dict['obstacles'])
+n_obstacles_str = str(len(obstacles_dict['obstacles']))
 
 #send to pc
-pc.send(n_obstacles)
-print("Message sent: ", n_obstacles)
+pc.send(n_obstacles_str)
+print("Message sent: ", n_obstacles_str)
 pc.disconnect()
-
-#start a thread to connect to camera
-camera.connect()
-print("Camera Connected") 
 
 commands_dict = get_stm_commands(obstacles_dict['obstacles']) 
 commands = commands_dict["commands"]
@@ -58,59 +60,69 @@ def send_commands(commands):
 
 
 #function to receive commands from stm
-def stm_producer(p, buffer):
+def producer(p, buffer):
     while True:
         data = p.receive()
         buffer.put(data) 
-        print("From STM: ",data)
+        print(f"From {p}:", data)
         if data == "#####":
             break
 
-#function to send command to image rec
-def camera_consumer(camera, buffer):
+def consumer(c, buffer):
     while True:
         data = buffer.get()
+        if data == "#####":
+            break
+        c.send(data)
+
+#function to send command to image rec
+def camera_cnp(camera, buffer_consumer, buffer_producer):
+    while True:
+        data = buffer_consumer.get()
         if data[0:2] == "ST":
-            camera.takePic(data[2:5])
+            reply = camera.takePic(data[2:5])
+            buffer_producer.put(reply)
         else:
-            camera.close()
+            camera.close() ##camera is disconnected
             break
 
-#buffer to receive commands from stm
+# def pc_producer(pc, buffer):
+#     while True:
+#         data = pc.receive()
+#         buffer.put(data)
+#         print("From PC: ", data)
+#         if data == "#####":
+#             break
+
+#can merge both producer functions to be one
+
+
+
+#buffer stm_camera communication, pc_android communication
 stm_camera_buffer = queue.Queue()
+camera_android_buffer = queue.Queue()
 
 #thread to receive commands from stm
-stm_producer_thread = threading.Thread(target=stm_producer, args=(stm, stm_camera_buffer))
+stm_producer_thread = threading.Thread(target=producer, args=(stm, stm_camera_buffer))
 
-#thread to take pic when command is received
-camera_consumer_thread = threading.Thread(target=camera_consumer, args=(camera, stm_camera_buffer))
+#thread to take pic when command is received, and store reply in producer buffer for android
+camera_cnp_thread = threading.Thread(target=camera_cnp, args=(camera, stm_camera_buffer, camera_android_buffer))
+
+#thread to send image content to android
+android_consumer_thread = threading.Thread(target=consumer, args=(android, camera_android_buffer))
+
 
 send_commands(commands)
-
-#TODO: Check if position is correct
-print("Sending to android coordinates: ", commands_dict["coordinates"])
-android.send(commands_dict["coordinates"])
-
 stm_producer_thread.start()
-camera_consumer_thread.start()
-
-camera_consumer_thread.join()
-
+camera_cnp_thread.start()
+android_consumer_thread.start()
 
 
-
-#connect to pc after camera connection is closed
-pc = PC(Config.RPI_IP_ADDRESS, 5000)
-pc.connect()
-
-#receive image content from pc, then send to android
-image_content = pc.receive()
-android.send(image_content)
-
-#close connections
-pc.disconnect()
-android.disconnect()
-
-#stm_send_thread.join()
 stm_producer_thread.join()
+camera_cnp_thread.join()
+android_consumer_thread.join()
+
+android.disconnect()
+stm.disconnect()
+
 print("Task 1 completed")

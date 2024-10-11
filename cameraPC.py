@@ -7,6 +7,9 @@ import time
 pc = PC(Config.RPI_IP_ADDRESS, 5000) 
 camera = ImageSender("tcp://192.168.32.27:5555")
 
+pc.connect()
+camera.connect()
+
 def pc_func(pc):
     pc.connect()
     for i in range(4):
