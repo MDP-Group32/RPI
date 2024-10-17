@@ -17,8 +17,6 @@ android = Android(Config.RPI_MAC_ADDRESS, Config.BT_PORT_NUMBER)
 stm = STM(Config.SERIAL_PORT, Config.BAUD_RATE)
 pc = PC(Config.RPI_IP_ADDRESS, Config.RPI_PC_PORT)
 
-
-
 android.connect()
 print("Android connected")
 stm.connect()
@@ -51,15 +49,6 @@ commands = commands_dict["commands"]
 print(type(commands))
 print(commands)
 
-#function to send commands to stm
-def send_commands(commands):
-    for command in commands:
-        stm.send(command['value'])
-        print("Command: ", command['value'])
-        reply = stm.receive()
-        #time.sleep(0.5)
-
-
 #function to receive commands from stm
 def producer(p, buffer):
     while True:
@@ -89,41 +78,23 @@ def camera_consumer(camera, buffer_consumer, android):
             camera.close() ##camera is disconnected
             break
 
-# def pc_producer(pc, buffer):
-#     while True:
-#         data = pc.receive() 
-#         buffer.put(data)
-#         print("From PC: ", data)
-#         if data == "#####":
-#             break
-
-#can merge both producer functions to be one
-
-
-
 #buffer stm_camera communication, pc_android communication
 stm_camera_buffer = queue.Queue()
-#camera_android_buffer = queue.Queue()
 
 #thread to receive commands from stm
 stm_producer_thread = threading.Thread(target=producer, args=(stm, stm_camera_buffer))
 
-#thread to take pic when command is received, and store reply in producer buffer for android
-camera_consumer_thread = threading.Thread(target=camera_consumer, args=(camera, stm_camera_buffer, camera_android_buffer))
+#thread to take pic when command is received, and send reply to android
+camera_consumer_thread = threading.Thread(target=camera_consumer, args=(camera, stm_camera_buffer, android))
 
-#thread to send image content to android
-#android_consumer_thread = threading.Thread(target=consumer, args=(android, camera_android_buffer))
+stm.send(commands[0]['value']) ## double check, need send buffer size first then commands
 
-
-send_commands(commands)
 stm_producer_thread.start()
 camera_consumer_thread.start()
-#android_consumer_thread.start()
 
 
 stm_producer_thread.join()
 camera_consumer_thread.join()
-#android_consumer_thread.join()
 
 android.disconnect()
 stm.disconnect()
