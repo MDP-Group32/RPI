@@ -20,22 +20,47 @@ android.connect()
 stm.connect()
 camera.connect()
 
-#receive start command from android then send to stm
-message = android.receive()
-stm.send(message)
-
-#function to send command to image rec
-def camera_cnp(camera, buffer_consumer, buffer_producer):
+#producer and consumer functions for threads
+def producer(p, buffer):
     while True:
-        data = buffer_consumer.get()
-        if data[0:2] == "ST":
-            reply = camera.takePic(data[2:5])
-            buffer_producer.put(reply)
+        data = p.receive()
+        buffer.put(data) 
+        print(f"From {p}:", data)
+        if data == "#####":
+            break
+
+def camera_consumer(camera, buffer, stm):
+    count = 1
+    while True:
+        data = buffer.get()
+        if data[0:2] == "ST": #confirm what command
+            reply = camera.takePic(count)
+            print("Reply received from Image rec:", reply)
+            stm.send(reply)
+            print("Sent to STM", reply)
+            count+=1
         else:
             camera.close() ##camera is disconnected
             break
 
 
+stm_camera_buffer = queue.Queue()
 
+#thread to receive capture commands from stm
+stm_producer_thread = threading.Thread(target=producer, args=(stm, stm_camera_buffer))
 
+#thread to take pic
+camera_consumer_thread = threading.Thread(target=camera_consumer, args=(camera, stm_camera_buffer, android))
+
+stm_producer_thread.start()
+camera_consumer_thread.start()
+
+#receive start command from android then send to stm
+message = android.receive()
+stm.send('s')
+
+stm_producer_thread().join()
+camera_consumer_thread.join()
+
+print("Task 2 completed")
 

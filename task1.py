@@ -44,8 +44,12 @@ pc.send(n_obstacles_str)
 print("Message sent: ", n_obstacles_str)
 pc.disconnect()
 
+print("before get_stm_command")
 commands_dict = get_stm_commands(obstacles_dict['obstacles']) 
-commands = commands_dict["commands"]
+print("after get_stm_command")
+
+commands = commands_dict["path_string"]
+commands_len = commands_dict['string_length']
 print(type(commands))
 print(commands)
 
@@ -58,19 +62,12 @@ def producer(p, buffer):
         if data == "#####":
             break
 
-def consumer(c, buffer):
-    while True:
-        data = buffer.get()
-        if data == "#####":
-            break
-        c.send(data)
-
 #function to send command to image rec
 def camera_consumer(camera, buffer_consumer, android):
     while True:
         data = buffer_consumer.get()
         if data[0:2] == "ST":
-            reply = camera.takePic(data[2:5])
+            reply = camera.takePic(data[2:5]).decode("utf-8")
             print("Reply received from Image rec:", reply)
             android.send(reply)
             print("Sent to android", reply)
@@ -87,7 +84,10 @@ stm_producer_thread = threading.Thread(target=producer, args=(stm, stm_camera_bu
 #thread to take pic when command is received, and send reply to android
 camera_consumer_thread = threading.Thread(target=camera_consumer, args=(camera, stm_camera_buffer, android))
 
-stm.send(commands[0]['value']) ## double check, need send buffer size first then commands
+#send lengh of commands, then the command
+stm.send(commands_len)
+time.sleep(0.5)
+stm.send(commands) ## double check, need send buffer size first then commands
 
 stm_producer_thread.start()
 camera_consumer_thread.start()

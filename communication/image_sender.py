@@ -10,7 +10,8 @@ class ImageSender:
         # Initialise and configure camera
         self.camera = PiCamera()
         self.camera.resolution = (1024, 768)
-        self.camera.rotation = 0
+        #self.camera.resolution = (3280, 2464)
+        self.camera.rotation = 180
         self.client_socket = client_socket
         self.image_sender = None
 
