@@ -10,8 +10,10 @@ class ImageSender:
         # Initialise and configure camera
         self.camera = PiCamera()
         self.camera.resolution = (1024, 768)
-        self.camera.rotation = 0
+        #self.camera.resolution = (3280, 2464)
+        self.camera.rotation = 180
         self.client_socket = client_socket
+        self.image_sender = None
 
     def connect(self):
         self.image_sender = imagezmq.ImageSender(connect_to=self.client_socket)
@@ -33,6 +35,7 @@ class ImageSender:
             reply = self.image_sender.send_image(identifier, image)
             print("Image sent successfully")
             print(reply)
+            return reply
             time.sleep(1)
         except Exception as e:
             print(f"Failed to send image: {e}")
